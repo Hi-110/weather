@@ -1,31 +1,35 @@
-#coding = utf-8
+#-*- coding: utf-8 -*-
 import urllib
 import re
-import urllib.request
+import urllib2
 import time
 import os
 import imageResize
 from PIL import Image,ImageDraw,ImageFont
 import json
-
+from selenium import webdriver
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 def getHtml(url):
-    page = urllib.request.urlopen(url)
+    req=urllib2.Request(url)
+    page = urllib2.urlopen(req)
     html = page.read()
     html = html.decode('utf-8')
-    print(html)
+    #print(html)
     return html
 
 def wenzi(im,state):
 
-    font = ImageFont.truetype('Songti.ttc', 30)
+    font = ImageFont.truetype('msyh.ttc', 30)
     draw = ImageDraw.Draw(im)
     day = time.strftime(u"%Y年%m月%d日", time.localtime(time.time()))
 
     ########配文字################
 
-    text = u'兴隆站天气' + day + u'\n凌晨 ' + state[0] + u'\n930 ' + state[1]+ u'\n当天 ' + state[2]+ u'\n次日 ' + state[3]
+    text = u'南山站天气' + day + u'\n凌晨 ' + state[0] + u'\n当前 ' + state[1]+ u'\n当天 ' + state[2]+ u'\n次日 ' + state[3]
     # text = u'你好\n你好'
     print(text)
     draw.text((20, 20), text, font=font, fill='#000000')
@@ -43,7 +47,7 @@ def wenzi(im,state):
 def Yuntu(arr):
     global dayNow
     global state
-    toImage = Image.new('RGBA', (900, 4400))
+    toImage = Image.new('RGBA', (900, 2200))
     for i in range(4):
         fromImge = Image.open(arr[i])
         loc = (50,(i * 600+270))
@@ -79,7 +83,8 @@ def mkdir(path):
 def download(_url, name):  # 下载函数
     if (_url == None):  # 地址若为None则跳过
         pass
-    result = urllib.request.urlopen(_url)  # 打开链接
+    req=urllib2.Request(_url)
+    result = urllib2.urlopen(req)  # 打开链接
     # print result.getcode()
     if (result.getcode() != 200):  # 如果链接不正常，则跳过这个链接
         pass
@@ -126,42 +131,65 @@ def getImg(html):
     d, t = GetNowTime()
     mkdir(d)
     ########晴天钟图################
-    weather_clock_url = "http://202.127.24.18/v4/bin/astro.php?lon=117.275&lat=40.26&lang=zh-CN&ac=0&unit=metric&tzshift=0"
+    weather_clock_url = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&tzshift=0"
     weather_clock="./" + str(d)+"/"+str(t) + "_weather_clock.jpg"
     download(weather_clock_url, weather_clock)
 
     ########天气预报图################
-    weather_forecast_url = "http://202.127.24.18/v4/bin/two.php?lon=117.275&lat=40.26&lang=zh-CN&ac=0&unit=metric&output=internal&tzshift=0"
+    weather_forecast_url = "http://202.127.24.18/v4/bin/civillight.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&output=internal&tzshift=0"
     weather_forecast="./" + str(d) + "/" + str(t) + "_weather_ forecast.jpg"
     download(weather_forecast_url, weather_forecast)
-
-    pattern = "(http:[^\s]*?(jpg|png|PNG|JPG))"
+    imgID = 'Image_asc'
+    pattern = "\d\d\d\d/\d\d/\d\d \d:\d\d:\d\d"
     imglist = re.findall(pattern, html)
+    imgurl='http://119.78.162.41:81/asc_main.aspx'
+    imgMorning='%s_%s_%s.jpg'%(imglist[0][-7:-6],imglist[0][-5:-3],imglist[0][-2:])
+    savePath1='%s\\%s'%(d,imgMorning)
+    print 'image morning: %s'%savePath1
+    midnightHour=1
+    nowHour=int(imglist[0][-7])
+    if nowHour<midnightHour :
+        print 'Please run this program at time later than %s hour '%midnightHour
+        return 0
+    for i in range(len(imglist)):
+        if imglist[i][-10:-8]==d[-2:]:
+            if int(imglist[i][-7:-6])==midnightHour and int(imglist[i][-5:-3])<10:
+                imgMidnight= '%s_%s_%s.jpg' % (imglist[i][-7:-6], imglist[i][-5:-3], imglist[i][-2:])
+                savePath2 = '%s\\%s' % (d, imgMidnight)
+                print 'image midnight: %s' % savePath2
+                webscreen(imgurl, imgID, savePath1, savePath2)
+                break
 
     ########打开这个会把全部全天相机图下载，返回值可以忽略################
     #midnightUrl=get_all_and_get_midnightUrl(imglist)
 
-    midnightUrl = find_midnightUrl(imglist)
-    print(midnightUrl)
+    # midnightUrl = find_midnightUrl(imglist)
+    # print(midnightUrl)
+    #
+    # nowUrl = imglist[0][0]
+    # urls=[midnightUrl,nowUrl,weather_clock_url,weather_forecast_url]
+    urls = [ weather_clock_url, weather_forecast_url]
 
-    nowUrl = imglist[0][0]
-    urls=[midnightUrl,nowUrl,weather_clock_url,weather_forecast_url]
+    weatherReport(savePath1,savePath2,urls)
+    print savePath1,savePath2,urls
 
-    weatherReport(urls)
-    print(urls)
-
-def weatherReport(urls):
+def weatherReport(imgMorn,imgMid,urls):
     global state
     arr=[]
+    imgMorning=imageResize.Graphics(imgMorn[:-4])
+    imgMorning.fixed_size(768, 512)
+    imgMidnight=imageResize.Graphics(imgMid[:-4])
+    imgMidnight.fixed_size(768, 512)
+    arr.append(imgMid[:-4] + '_1.jpg')
+    arr.append(imgMorn[:-4]+'_1.jpg')
     for i in range(len(urls)):
         download(urls[i], "./"+dayNow+'/'+str(i)+".jpg")
         a=imageResize.Graphics("./"+dayNow+'/'+str(i))
-        if i<2:
-            a.fixed_size(768, 512)
-        if i==2:
+        if i==0:
             a.fixed_size(768, 312)
-        if i==3:
-            a.fixed_size(768, 1200)
+        if i==1:
+            # a.fixed_size(768, 1200)
+            a.fixed_size(768, 184)
         arr.append("./"+dayNow+'/'+str(i)+'_1.jpg')
         #arr=
     Yuntu(arr)
@@ -170,9 +198,9 @@ def get_state(version=1):
     global state
 
     ########晴天钟json数据################
-    ApiUrl = "http://202.127.24.18/v4/bin/astro.php?lon=117.275&lat=40.26&ac=0&lang=en&unit=metric&output=json&tzshift=0"
+    ApiUrl = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&ac=0&lang=en&unit=metric&output=json&tzshift=0"
 
-    html = urllib.request.urlopen(ApiUrl)
+    html = urllib.urlopen(ApiUrl)
     data = html.read().decode("utf-8")
     ss = json.loads(data)
     print (ss)
@@ -213,6 +241,46 @@ def get_state(version=1):
         pass
     print (state)
 
+def webscreen(url,eleID,savepath1,savepath2):
+    driver = webdriver.PhantomJS()
+    driver.set_page_load_timeout(3000)
+    driver.set_window_size(1280,800)
+    driver.get(url)
+    imgelement1 = driver.find_element_by_id(eleID)
+    location = imgelement1.location
+    size = imgelement1.size
+    driver.save_screenshot(savepath1)
+    im1 = Image.open(savepath1)
+    left = location['x']
+    top = location['y']
+    right = left + size['width']
+    bottom = location['y'] + size['height']
+    im1 = im1.crop((left, top, right, bottom))
+    im1.save(savepath1)
+    all_options = driver.find_elements_by_tag_name("option")
+    for option in all_options:
+        value=option.get_attribute("value")
+        valueTime = '%s_%s_%s' % (value[-7:-6], value[-5:-3], value[-2:])
+        if valueTime==savepath2[-11:-4]:
+            print("Value is: %s" % valueTime)
+            option.click()
+            time.sleep(60)
+            imgelement2 = driver.find_element_by_id(eleID)
+            location = imgelement2.location
+            size = imgelement2.size
+            driver.save_screenshot(savepath2)
+            im2 = Image.open(savepath2)
+            left = location['x']
+            top = location['y']
+            right = left + size['width']
+            bottom = location['y'] + size['height']
+            im2 = im2.crop((left, top, right, bottom))
+            print size,left,top,right,bottom
+            im2.save(savepath2)
+            break
+        else:
+            continue
+    return im1,im2
 
 if __name__ == '__main__' :
 
@@ -223,7 +291,8 @@ if __name__ == '__main__' :
     get_state()
 
     ########天文台全天相机################
-    html = getHtml("http://www.xinglong-naoc.org/weather/")
+    html = getHtml("http://119.78.162.41:81/asc_main.aspx")
+    # html = getHtml("http://119.78.162.41:81")
     getImg(html)
 
 
