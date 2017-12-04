@@ -19,7 +19,7 @@ def getHtml(url):
     page = urllib2.urlopen(req)
     html = page.read()
     html = html.decode('utf-8')
-    #print(html)
+    # print(html)
     return html
 
 def wenzi(im,state):
@@ -141,21 +141,24 @@ def getImg(html,weather_clock_url,weather_forecast_url):
     weather_forecast="./" + str(d) + "/" + str(t) + "_weather_ forecast.jpg"
     download(weather_forecast_url, weather_forecast)
     imgID = 'Image_asc'
-    pattern = "\d\d\d\d/\d\d/\d\d \d:\d\d:\d\d"
+    pattern = "\d\d\d\d-\d\d-\d\d  \d\d:\d\d:\d\d"
     imglist = re.findall(pattern, html)
+    # print imglist[0]
     imgurl='http://119.78.162.41:81/asc_main.aspx'
-    imgMorning='%s_%s_%s.jpg'%(imglist[0][-7:-6],imglist[0][-5:-3],imglist[0][-2:])
+    imgMorning='%s_%s_%s.jpg'%(imglist[0][12:14],imglist[0][15:17],imglist[0][-2:])
     savePath1='%s\\%s'%(d,imgMorning)
     print 'image morning: %s'%savePath1
+    # print imglist
     midnightHour=2
-    nowHour=int(imglist[0][-7])
+    nowHour=int(imglist[0][12:14])
     if nowHour<midnightHour :
         print 'Please run this program at time later than %s hour '%midnightHour
         return 0
     for i in range(len(imglist)):
-        if imglist[i][-10:-8]==d[-2:]:
-            if int(imglist[i][-7:-6])==midnightHour and int(imglist[i][-5:-3])<10:
-                imgMidnight= '%s_%s_%s.jpg' % (imglist[i][-7:-6], imglist[i][-5:-3], imglist[i][-2:])
+        # print imglist[i][8:10],d[-2:]
+        if int(imglist[i][8:10])==int(d[-2:]):
+            if int(imglist[i][12:14])==midnightHour and int(imglist[i][15:17])<10:
+                imgMidnight= '%s_%s_%s.jpg' % (imglist[i][12:14], imglist[i][15:17], imglist[i][-2:])
                 savePath2 = '%s\\%s' % (d, imgMidnight)
                 print 'image midnight: %s' % savePath2
                 webscreen(imgurl, imgID, savePath1, savePath2)
@@ -241,7 +244,7 @@ def get_state(version,ApiUrl):
     ########前一天晚上运行，得到凌晨状况，默认优################
     if version == 2:
 
-        cloudcover_yesterday = (cloudcover[27] + cloudcover[30]) / 2
+        cloudcover_yesterday = (cloudcover[9] + cloudcover[12]) / 2
         cloudcover_state[0]=cloudcover_yesterday
         if cloudcover_state[0] > 0:
             state[0] = u"优"
@@ -311,8 +314,7 @@ def auto_weather_report_Nanshan(running_day,midnight_time,morning_time,check_min
 
     for day in range(1,running_day+1):
         print 'the auto weather report program for Nanshan is running in day %s, it will running for %s days'%(day,running_day)
-        day_now=time.strftime(u"%Y_%m_%d", time.localtime(time.time()))
-        dayNow=day_now
+
         state=[u'NA', u'NA', u'NA', u'NA']
         is_midnight=False
         is_morning=False
@@ -323,8 +325,11 @@ def auto_weather_report_Nanshan(running_day,midnight_time,morning_time,check_min
                 print 'wait %s minutes'%check_min
                 time.sleep(check_min*60)
             else:
-                print 'now time is %s in day %s midnight, check weather state...'%(time_hour,day_now)
+                print 'now time is %s in midnight, check weather state...'%(time_hour)
                 is_midnight=True
+        day_now=time.strftime(u"%Y_%m_%d", time.localtime(time.time()))
+        dayNow=day_now
+        print day_now
         get_state(2,url[3])
         while not is_morning:
             time_hour = int(time.strftime(u"%H", time.localtime(time.time())))
@@ -346,7 +351,7 @@ def auto_weather_report_Nanshan(running_day,midnight_time,morning_time,check_min
 def auto_weather_report_Nanshan_test():
     [running_day, midnight_time, morning_time, check_min]=[30,2,9,5]
     camera_url="http://119.78.162.41:81/asc_main.aspx"
-    email_info = ['daihui@mail.ustc.edu.cn', 'XXX', 'levitan@msn.cn', 'mail.ustc.edu.cn']
+    email_info = ['daihui@mail.ustc.edu.cn', 'password', 'levitan@msn.cn', 'mail.ustc.edu.cn']
     weather_clock_url = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&tzshift=0"
     weather_forecast_url = "http://202.127.24.18/v4/bin/civillight.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&output=internal&tzshift=0"
     ApiUrl = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&ac=0&lang=en&unit=metric&output=json&tzshift=0"
