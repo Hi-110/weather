@@ -25,35 +25,37 @@ def getHtml(url):
 def wenzi(im,state):
 
     font = ImageFont.truetype('msyh.ttc', 30)
+    font_note = ImageFont.truetype('msyh.ttc', 20)
     draw = ImageDraw.Draw(im)
-    day = time.strftime(u"%Y年%m月%d日", time.localtime(time.time()))
+    day = time.strftime(u"%Y/%m/%d", time.localtime(time.time()))
 
     ########配文字################
 
-    text = u'南山站天气' + day + u'\n凌晨 ' + state[0] + u'\n当前 ' + state[1]+ u'\n当天 ' + state[2]+ u'\n次日 ' + state[3]
-    # text = u'你好\n你好'
-    print(text)
+    text = u'南山站天气 ' + day + u'\n凌晨 ' + state[0] + u'\n当前 ' + state[1]+ u'\n当天 ' + state[2]+ u'\n次日 ' + state[3]
+    text_note = u'\n注意：上面优良差是程序自动爬取晴天钟数据判断获得\n云量相机可以为凌晨以及当前天气做更精确的参考'
+    print(text+text_note)
     draw.text((20, 20), text, font=font, fill='#000000')
+    draw.text((20, 180), text_note, font=font_note, fill='#888888')
     text1 = u'凌晨云量'
-    draw.text((20,220), text1, font=font, fill='#000000')
+    draw.text((20,280), text1, font=font, fill='#000000')
     text2 = u'当前云量'
-    draw.text((20, 820), text2, font=font, fill='#000000')
+    draw.text((20, 880), text2, font=font, fill='#000000')
     text3 = u'晴天钟预报'
-    draw.text((20, 1420), text3, font=font, fill='#000000')
+    draw.text((20, 1480), text3, font=font, fill='#000000')
     text4 = u'天气预报'
-    draw.text((20, 1820), text4, font=font, fill='#000000')
+    draw.text((20, 1880), text4, font=font, fill='#000000')
 
-    return  im,text
+    return  im,text+text_note
 
 def Yuntu(arr):
     global dayNow
     global state
-    toImage = Image.new('RGBA', (900, 2200),'#FFFFFF')
+    toImage = Image.new('RGBA', (900, 2260),'#FFFFFF')
     for i in range(4):
         fromImge = Image.open(arr[i])
-        loc = (50,(i * 600+270))
+        loc = (50,(i * 600+330))
         if i==3:
-            loc = (50,1870)
+            loc = (50,1930)
         print(loc)
         toImage.paste(fromImge, loc)
     toImage,info_text=wenzi(toImage,state)
@@ -351,7 +353,7 @@ def auto_weather_report_Nanshan(running_day,midnight_time,morning_time,check_min
 def auto_weather_report_Nanshan_test():
     [running_day, midnight_time, morning_time, check_min]=[30,2,9,5]
     camera_url="http://119.78.162.41:81/asc_main.aspx"
-    email_info = ['daihui@mail.ustc.edu.cn', 'password', 'levitan@msn.cn', 'mail.ustc.edu.cn']
+    email_info = ['daihui@mail.ustc.edu.cn', 'levitan2012', 'levitan@msn.cn', 'mail.ustc.edu.cn']
     weather_clock_url = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&tzshift=0"
     weather_forecast_url = "http://202.127.24.18/v4/bin/civillight.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&output=internal&tzshift=0"
     ApiUrl = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&ac=0&lang=en&unit=metric&output=json&tzshift=0"
