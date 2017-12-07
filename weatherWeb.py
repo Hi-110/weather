@@ -353,7 +353,7 @@ def auto_weather_report_Nanshan(running_day,midnight_time,morning_time,check_min
 def auto_weather_report_Nanshan_test():
     [running_day, midnight_time, morning_time, check_min]=[30,2,9,5]
     camera_url="http://119.78.162.41:81/asc_main.aspx"
-    email_info = ['daihui@mail.ustc.edu.cn', 'levitan2012', 'levitan@msn.cn', 'mail.ustc.edu.cn']
+    email_info = ['daihui@mail.ustc.edu.cn', 'password', 'ustclin@mail.ustc.edu.cn', 'mail.ustc.edu.cn']
     weather_clock_url = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&tzshift=0"
     weather_forecast_url = "http://202.127.24.18/v4/bin/civillight.php?lon=87.177&lat=43.475&lang=zh-CN&ac=2000&unit=metric&output=internal&tzshift=0"
     ApiUrl = "http://202.127.24.18/v4/bin/astro.php?lon=87.177&lat=43.475&ac=0&lang=en&unit=metric&output=json&tzshift=0"
